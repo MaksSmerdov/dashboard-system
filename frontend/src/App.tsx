@@ -1,35 +1,85 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.tsx
+import { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
+import axios from 'axios';
+import type { RootState } from "./store/store";
+import { setCredentials, setError, logout } from "./store/authSlice";
+import RegisterForm from './components/UI/Forms/RegisterForm';
+import LoginForm from './components/UI/Forms/LoginForm';
+import Profile from "./components/Profile";
+import styles from './App.module.scss';
 
-function App() {
-  const [count, setCount] = useState(0)
+const BASE_URL = 'http://localhost:5000/api/auth';
+
+const App: React.FC = () => {
+  const dispatch = useDispatch();
+  const { token } = useSelector((state: RootState) => state.auth);
+  const [checking, setChecking] = useState(true); // пока проверяем токен — блокируем редиректы
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const storedToken = localStorage.getItem('token');
+      if (!storedToken) {
+        setChecking(false);
+        return;
+      }
+
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+
+      try {
+        const response = await axios.get(`${BASE_URL}/me`);
+        dispatch(setCredentials({ token: storedToken, user: response.data.user }));
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          dispatch(setError('Токен недействителен, пожалуйста, войдите снова'));
+          dispatch(logout());
+        } else {
+          dispatch(setError('Не удалось проверить токен. Проверьте соединение.'));
+        }
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkToken();
+  }, [dispatch]);
+
+  // Синхронизируем axios столбец заголовка с текущим token в redux
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  }, [token]);
+
+  // Пока мы проверяем токен, можно вернуть простой загрузчик (или null)
+  if (checking) {
+    return <div className={`${styles['container']}`}><p>Проверка сессии...</p></div>;
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div className={`${styles['container']}`}>
+        <Routes>
+          <Route
+            path="/register"
+            element={token ? <Navigate to="/profile" /> : <RegisterForm />}
+          />
+          <Route
+            path="/login"
+            element={token ? <Navigate to="/profile" /> : <LoginForm />}
+          />
+          <Route
+            path="/profile"
+            element={token ? <Profile /> : <Navigate to="/login" />}
+          />
+          <Route path="*" element={<Navigate to={token ? '/profile' : '/login'} />} />
+        </Routes>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;

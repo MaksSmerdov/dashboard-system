@@ -1,0 +1,35 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f2f5;
+}
+
+.forms {
+  display: flex;
+  gap: 20px;
+}
+
+.welcome {
+  text-align: center;
+
+  p {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+}
+
+.logoutButton {
+  padding: 10px 20px;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover {
+    background: #c82333;
+  }
+}
