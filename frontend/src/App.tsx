@@ -1,21 +1,22 @@
 // src/App.tsx
+import * as React from "react";
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import axios from 'axios';
 import type { RootState } from "./store/store";
 import { setCredentials, setError, logout } from "./store/authSlice";
-import RegisterForm from './components/UI/Forms/RegisterForm';
-import LoginForm from './components/UI/Forms/LoginForm';
-import Profile from "./components/Profile";
+import RegisterForm from './modules/Forms/RegisterForm';
+import LoginForm from './modules/Forms/LoginForm';
 import styles from './App.module.scss';
+import Home from "./modules/Home/Home.tsx";
 
 const BASE_URL = 'http://localhost:5000/api/auth';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
   const { token } = useSelector((state: RootState) => state.auth);
-  const [checking, setChecking] = useState(true); // пока проверяем токен — блокируем редиректы
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const checkToken = async () => {
@@ -69,13 +70,13 @@ const App: React.FC = () => {
           />
           <Route
             path="/login"
-            element={token ? <Navigate to="/profile" /> : <LoginForm />}
+            element={token ? <Navigate to="/dashboard" /> : <LoginForm />}
           />
           <Route
-            path="/profile"
-            element={token ? <Profile /> : <Navigate to="/login" />}
+            path="/dashboard"
+            element={token ? <Home /> : <Navigate to="/login" />}
           />
-          <Route path="*" element={<Navigate to={token ? '/profile' : '/login'} />} />
+          <Route path="*" element={<Navigate to={token ? '/dashboard' : '/login'} />} />
         </Routes>
       </div>
     </BrowserRouter>

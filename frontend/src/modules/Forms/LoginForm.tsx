@@ -1,9 +1,12 @@
 import * as React from "react";
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import type {RootState} from "../../../store/store.ts";
-import { setCredentials, setError, setLoading} from "../../../store/authSlice.ts";
+import type { RootState } from "../../store/store.ts";
+import { setCredentials, setError, setLoading } from "../../store/authSlice.ts";
+import { getErrorMessage } from '../../utils/errors.ts';
+import Button from "../../components/UI/Button/Button.tsx";
 import styles from './Form.module.scss';
 
 interface LoginFormData {
@@ -23,7 +26,8 @@ const LoginForm: React.FC = () => {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name as keyof LoginFormData]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +47,7 @@ const LoginForm: React.FC = () => {
       dispatch(setCredentials({ token: response.data.token, user: response.data.user }));
       setFormData({ email: '', password: '' });
     } catch (err: unknown) {
-      dispatch(setError((err as any).response?.data?.msg || 'Ошибка авторизации'));
+      dispatch(setError(getErrorMessage(err)));
     }
   };
 
@@ -72,12 +76,14 @@ const LoginForm: React.FC = () => {
             placeholder="Введите пароль"
           />
         </div>
-        <button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading}>
           {loading ? 'Загрузка...' : 'Войти'}
-        </button>
-        <button type="submit" disabled={loading}>
+        </Button>
+
+        {/* Кнопка регистрации не должна сабмитить — лучше Link */}
+        <Link to="/register" className={styles.linkButton}>
           Регистрация
-        </button>
+        </Link>
       </form>
     </div>
   );

@@ -1,9 +1,11 @@
+import * as React from "react";
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import type {RootState} from "../../../store/store.ts";
-import { setCredentials, setError, setLoading} from "../../../store/authSlice.ts";
+import type { RootState } from "../../store/store.ts";
+import { setCredentials, setError, setLoading } from "../../store/authSlice.ts";
 import styles from './Form.module.scss';
+import { getErrorMessage } from '../../utils/errors.ts';
 
 interface RegisterFormData {
   name: string;
@@ -26,7 +28,8 @@ const RegisterForm: React.FC = () => {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name as keyof RegisterFormData]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +57,7 @@ const RegisterForm: React.FC = () => {
       dispatch(setCredentials({ token: response.data.token, user: response.data.user }));
       setFormData({ name: '', surname: '', email: '', password: '' });
     } catch (err: unknown) {
-      dispatch(setError((err as any).response?.data?.msg || 'Ошибка регистрации'));
+      dispatch(setError(getErrorMessage(err)));
     }
   };
 
