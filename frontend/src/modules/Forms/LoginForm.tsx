@@ -1,12 +1,13 @@
-import * as React from "react";
+import * as React from 'react';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import type { RootState } from "../../store/store.ts";
-import { setCredentials, setError, setLoading } from "../../store/authSlice.ts";
+import type { RootState } from '../../store/store.ts';
+import { setCredentials, setError, setLoading } from '../../store/authSlice.ts';
 import { getErrorMessage } from '../../utils/errors.ts';
-import Button from "../../components/UI/Button/Button.tsx";
+import Button from '../../components/UI/Button/Button.tsx';
+import Input from '../../components/UI/Input/Input.tsx';
 import styles from './Form.module.scss';
 
 interface LoginFormData {
@@ -52,35 +53,29 @@ const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className={styles.formContainer}>
-      <h2>Вход</h2>
-      {error && <p className={styles.error}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Введите email"
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label>Пароль</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Введите пароль"
-          />
-        </div>
+    <div className={`${styles['form-container']}`}>
+      <h2 className={`${styles['form-title']}`}>Вход</h2>
+      {error && <p className={`${styles['form__error']}`}>{error}</p>}
+      <form className={`${styles['form-inputs']}`} onSubmit={handleSubmit}>
+        <Input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Введите email"
+          label="Email"
+        />
+        <Input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Введите пароль"
+          label="Пароль"
+        />
         <Button type="submit" disabled={loading}>
           {loading ? 'Загрузка...' : 'Войти'}
         </Button>
-
-        {/* Кнопка регистрации не должна сабмитить — лучше Link */}
         <Link to="/register" className={styles.linkButton}>
           Регистрация
         </Link>

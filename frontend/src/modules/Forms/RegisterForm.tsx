@@ -1,11 +1,12 @@
 import * as React from "react";
-import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import {useState} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
-import type { RootState } from "../../store/store.ts";
-import { setCredentials, setError, setLoading } from "../../store/authSlice.ts";
+import type {RootState} from "../../store/store.ts";
+import {setCredentials, setError, setLoading} from "../../store/authSlice.ts";
 import styles from './Form.module.scss';
-import { getErrorMessage } from '../../utils/errors.ts';
+import {getErrorMessage} from '../../utils/errors.ts';
+import Input from "../../components/UI/Input/Input.tsx";
 
 interface RegisterFormData {
   name: string;
@@ -18,7 +19,7 @@ const BASE_URL = 'http://localhost:5000/api/auth';
 
 const RegisterForm: React.FC = () => {
   const dispatch = useDispatch();
-  const { error, loading } = useSelector((state: RootState) => state.auth);
+  const {error, loading} = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState<RegisterFormData>({
     name: '',
@@ -28,8 +29,8 @@ const RegisterForm: React.FC = () => {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name as keyof RegisterFormData]: value }));
+    const {name, value} = e.target;
+    setFormData(prev => ({...prev, [name as keyof RegisterFormData]: value}));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,58 +55,50 @@ const RegisterForm: React.FC = () => {
     dispatch(setLoading());
     try {
       const response = await axios.post(`${BASE_URL}/register`, formData);
-      dispatch(setCredentials({ token: response.data.token, user: response.data.user }));
-      setFormData({ name: '', surname: '', email: '', password: '' });
+      dispatch(setCredentials({token: response.data.token, user: response.data.user}));
+      setFormData({name: '', surname: '', email: '', password: ''});
     } catch (err: unknown) {
       dispatch(setError(getErrorMessage(err)));
     }
   };
 
   return (
-    <div className={styles.formContainer}>
-      <h2>Регистрация</h2>
-      {error && <p className={styles.error}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
-          <label>Имя</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Введите имя"
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label>Фамилия</label>
-          <input
-            type="text"
-            name="surname"
-            value={formData.surname}
-            onChange={handleChange}
-            placeholder="Введите фамилию"
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Введите email"
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label>Пароль</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Введите пароль"
-          />
-        </div>
+    <div className={`${styles['form-container']}`}>
+      <h2 className={`${styles['form-title']}`}>Регистрация</h2>
+      {error && <p className={`${styles['form__error']}`}>{error}</p>}
+      <form className={`${styles['form-inputs']}`} onSubmit={handleSubmit}>
+        <Input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Введите имя"
+          label="Имя"
+        />
+        <Input
+          type="text"
+          name="surname"
+          value={formData.surname}
+          onChange={handleChange}
+          placeholder="Введите фамилию"
+          label="Фамилия"
+        />
+        <Input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Введите email"
+          label="Email"
+        />
+        <Input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Введите пароль"
+          label="Пароль"
+        />
         <button type="submit" disabled={loading}>
           {loading ? 'Загрузка...' : 'Зарегистрироваться'}
         </button>
