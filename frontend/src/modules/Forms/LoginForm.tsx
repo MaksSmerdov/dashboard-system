@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import {useState} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {Link} from 'react-router-dom';
 import axios from 'axios';
-import type { RootState } from '../../store/store.ts';
-import { setCredentials, setError, setLoading } from '../../store/authSlice.ts';
-import { getErrorMessage } from '../../utils/errors.ts';
+import type {RootState} from '../../store/store.ts';
+import {setCredentials, setError, setLoading} from '../../store/slices/authSlice.ts';
+import {getErrorMessage} from '../../utils/errors.ts';
 import Button from '../../components/UI/Button/Button.tsx';
 import Input from '../../components/UI/Input/Input.tsx';
 import styles from './Form.module.scss';
@@ -19,7 +19,7 @@ const BASE_URL = 'http://localhost:5000/api/auth';
 
 const LoginForm: React.FC = () => {
   const dispatch = useDispatch();
-  const { error, loading } = useSelector((state: RootState) => state.auth);
+  const {error, loading} = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -27,8 +27,8 @@ const LoginForm: React.FC = () => {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name as keyof LoginFormData]: value }));
+    const {name, value} = e.target;
+    setFormData(prev => ({...prev, [name as keyof LoginFormData]: value}));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,8 +45,8 @@ const LoginForm: React.FC = () => {
     dispatch(setLoading());
     try {
       const response = await axios.post(`${BASE_URL}/login`, formData);
-      dispatch(setCredentials({ token: response.data.token, user: response.data.user }));
-      setFormData({ email: '', password: '' });
+      dispatch(setCredentials({token: response.data.token, user: response.data.user}));
+      setFormData({email: '', password: ''});
     } catch (err: unknown) {
       dispatch(setError(getErrorMessage(err)));
     }

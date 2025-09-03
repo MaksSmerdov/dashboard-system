@@ -3,7 +3,7 @@ import {useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import type {RootState} from "../../store/store.ts";
-import {setCredentials, setError, setLoading} from "../../store/authSlice.ts";
+import {setCredentials, setError, setLoading} from "../../store/slices/authSlice.ts";
 import styles from './Form.module.scss';
 import {getErrorMessage} from '../../utils/errors.ts';
 import Input from "../../components/UI/Input/Input.tsx";

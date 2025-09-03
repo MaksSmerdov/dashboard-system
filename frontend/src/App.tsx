@@ -1,11 +1,11 @@
 // src/App.tsx
 import * as React from "react";
-import { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
+import {Routes, Route, Navigate, BrowserRouter} from 'react-router-dom';
 import axios from 'axios';
-import type { RootState } from "./store/store";
-import { setCredentials, setError, logout } from "./store/authSlice";
+import type {RootState} from "./store/store";
+import {setCredentials, setError, logout} from "./store/slices/authSlice.ts";
 import RegisterForm from './modules/Forms/RegisterForm';
 import LoginForm from './modules/Forms/LoginForm';
 import styles from './App.module.scss';
@@ -15,7 +15,7 @@ const BASE_URL = 'http://localhost:5000/api/auth';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
-  const { token } = useSelector((state: RootState) => state.auth);
+  const {token} = useSelector((state: RootState) => state.auth);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const App: React.FC = () => {
 
       try {
         const response = await axios.get(`${BASE_URL}/me`);
-        dispatch(setCredentials({ token: storedToken, user: response.data.user }));
+        dispatch(setCredentials({token: storedToken, user: response.data.user}));
       } catch (err: unknown) {
         if (axios.isAxiosError(err) && err.response?.status === 401) {
           dispatch(setError('Токен недействителен, пожалуйста, войдите снова'));
@@ -66,17 +66,17 @@ const App: React.FC = () => {
         <Routes>
           <Route
             path="/register"
-            element={token ? <Navigate to="/profile" /> : <RegisterForm />}
+            element={token ? <Navigate to="/profile"/> : <RegisterForm/>}
           />
           <Route
             path="/login"
-            element={token ? <Navigate to="/dashboard" /> : <LoginForm />}
+            element={token ? <Navigate to="/dashboard"/> : <LoginForm/>}
           />
           <Route
             path="/dashboard"
-            element={token ? <Home /> : <Navigate to="/login" />}
+            element={token ? <Home/> : <Navigate to="/login"/>}
           />
-          <Route path="*" element={<Navigate to={token ? '/dashboard' : '/login'} />} />
+          <Route path="*" element={<Navigate to={token ? '/dashboard' : '/login'}/>}/>
         </Routes>
       </div>
     </BrowserRouter>

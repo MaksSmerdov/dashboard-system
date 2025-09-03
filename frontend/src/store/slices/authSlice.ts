@@ -1,12 +1,13 @@
 // src/store/authSlice.ts
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import api from '../api/axios';
+import {createSlice, type PayloadAction} from '@reduxjs/toolkit';
+import api from '../../api/axios.ts';
 
 interface User {
   name: string;
   surname: string;
   email: string;
 }
+
 interface AuthState {
   token: string | null;
   user: User | null;
@@ -74,5 +75,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, setError, setLoading, logout } = authSlice.actions;
+export const {setCredentials, setError, setLoading, logout} = authSlice.actions;
 export default authSlice.reducer;

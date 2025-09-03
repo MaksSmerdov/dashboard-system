@@ -1,6 +1,6 @@
 import {useSelector, useDispatch} from 'react-redux';
 import type {RootState} from '../../store/store.ts';
-import {logout} from '../../store/authSlice.ts';
+import {logout} from '../../store/slices/authSlice.ts';
 import Button from '../UI/Button/Button.tsx';
 import styles from './Header.module.scss';
 
