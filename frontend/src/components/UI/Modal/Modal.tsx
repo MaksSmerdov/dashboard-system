@@ -30,9 +30,10 @@ const Modal: React.FC<ModalProps> = ({isOpen, onClose, children, title}) => {
   const modalStyle: React.CSSProperties = {
     backgroundColor: 'white',
     padding: '20px',
-    borderRadius: '8px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
     maxWidth: '500px',
+    maxHeight: '700px',
+    overflow: 'auto',
     width: '100%',
     position: 'relative',
   };

@@ -1,0 +1,22 @@
+.dashboard {
+  &__title {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__section {
+    &--tables {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+  }
+
+  &__table {
+    padding: 5px;
+    border: 1px solid grey;
+    border-radius: 12px;
+  }
+}
