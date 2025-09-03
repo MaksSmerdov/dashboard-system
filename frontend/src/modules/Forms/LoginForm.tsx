@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {useState} from 'react';
+import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useDispatch, useSelector} from 'react-redux';
-import {Link} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import type {RootState} from '../../store/store.ts';
 import {setCredentials, setError, setLoading} from '../../store/slices/authSlice.ts';
@@ -19,66 +19,73 @@ const BASE_URL = 'http://localhost:5000/api/auth';
 
 const LoginForm: React.FC = () => {
   const dispatch = useDispatch();
-  const {error, loading} = useSelector((state: RootState) => state.auth);
+  const {error: authError, loading} = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
 
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: '',
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: {errors},
+    reset,
+    setError: setFormError, // Добавляем для обработки серверных ошибок под полями
+  } = useForm<LoginFormData>();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {name, value} = e.target;
-    setFormData(prev => ({...prev, [name as keyof LoginFormData]: value}));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) {
-      dispatch(setError('Заполните все поля'));
-      return;
-    }
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
-      dispatch(setError('Введите корректный email'));
-      return;
-    }
-
+  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
     dispatch(setLoading());
     try {
-      const response = await axios.post(`${BASE_URL}/login`, formData);
+      const response = await axios.post(`${BASE_URL}/login`, data);
       dispatch(setCredentials({token: response.data.token, user: response.data.user}));
-      setFormData({email: '', password: ''});
+      reset();
     } catch (err: unknown) {
-      dispatch(setError(getErrorMessage(err)));
+      if (axios.isAxiosError(err) && err.response?.data?.errors) {
+        // Аналогично RegisterForm: Устанавливаем ошибки под поля, если сервер возвращает структурированные ошибки
+        const serverErrors = err.response.data.errors;
+        Object.keys(serverErrors).forEach((field) => {
+          setFormError(field as keyof LoginFormData, {message: serverErrors[field]});
+        });
+      } else {
+        dispatch(setError(getErrorMessage(err)));
+      }
     }
+  };
+
+  const handleRegisterClick = () => {
+    navigate('/register'); // Навигация на страницу регистрации
   };
 
   return (
     <div className={`${styles['form-container']}`}>
       <h2 className={`${styles['form-title']}`}>Вход</h2>
-      {error && <p className={`${styles['form__error']}`}>{error}</p>}
-      <form className={`${styles['form-inputs']}`} onSubmit={handleSubmit}>
+      {authError && <span className={`${styles['form__error']}`}>{authError}</span>}
+      <form className={`${styles['form-inputs']}`} onSubmit={handleSubmit(onSubmit)}>
         <Input
           type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
+          {...register('email', {
+            required: 'Заполните поле',
+            pattern: {
+              value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+              message: 'Введите корректный email',
+            },
+          })}
           placeholder="Введите email"
           label="Email"
+          error={errors.email?.message}
         />
+
         <Input
           type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
+          {...register('password', {required: 'Заполните поле'})}
           placeholder="Введите пароль"
           label="Пароль"
+          error={errors.password?.message}
         />
-        <Button type="submit" disabled={loading}>
+        {authError && <span className={`${styles['form__error--login']}`}>{authError}</span>}
+        <Button style={{marginTop: '20px'}} type="submit" disabled={loading}>
           {loading ? 'Загрузка...' : 'Войти'}
         </Button>
-        <Link to="/register" className={styles.linkButton}>
+        <Button onClick={handleRegisterClick} disabled={loading}>
           Регистрация
-        </Link>
+        </Button>
       </form>
     </div>
   );

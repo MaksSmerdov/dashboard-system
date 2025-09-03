@@ -4,25 +4,20 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export const register = [
-  body('name')
-  .notEmpty()
-  .withMessage('Имя обязательно')
-  .matches(/^[а-яА-ЯёЁ\s-]+$/)
-  .withMessage('Имя должно содержать только русские буквы, пробелы или дефисы'),
-  body('surname')
-  .notEmpty()
-  .withMessage('Фамилия обязательна')
-  .matches(/^[а-яА-ЯёЁ\s-]+$/)
-  .withMessage('Фамилия должна содержать только русские буквы, пробелы или дефисы'),
-  body('email')
-  .isEmail()
-  .withMessage('Введите корректный email')
-  .normalizeEmail(),
-  body('password')
-  .isLength({ min: 6 })
-  .withMessage('Пароль должен быть не короче 6 символов'),
+  body('name').
+  notEmpty().
+  withMessage('Имя обязательно').
+  matches(/^[а-яА-ЯёЁ\s-]+$/).
+  withMessage('Имя должно содержать только русские буквы, пробелы или дефисы'),
+  body('surname').
+  notEmpty().
+  withMessage('Фамилия обязательна').
+  matches(/^[а-яА-ЯёЁ\s-]+$/).
+  withMessage('Фамилия должна содержать только русские буквы, пробелы или дефисы'),
+  body('email').isEmail().withMessage('Введите корректный email').normalizeEmail(),
+  body('password').isLength({ min: 6 }).withMessage('Пароль должен быть не короче 6 символов'),
 
-  async (req, res ) => {
+  async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -54,13 +49,8 @@ export const register = [
 ];
 
 export const login = [
-  body('email')
-  .isEmail()
-  .withMessage('Введите корректный email')
-  .normalizeEmail(),
-  body('password')
-  .notEmpty()
-  .withMessage('Пароль обязателен'),
+  body('email').isEmail().withMessage('Введите корректный email').normalizeEmail(),
+  body('password').notEmpty().withMessage('Пароль обязателен'),
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -82,7 +72,7 @@ export const login = [
       }
 
       const payload = { user: { id: user.id } };
-      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
       res.json({ token, user: { name: user.name, surname: user.surname, email: user.email } });
     } catch (err) {

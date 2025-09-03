@@ -8,6 +8,19 @@ const Header = () => {
   const {user} = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return 'Доброе утро';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Добрый день';
+    } else if (hour >= 18 && hour < 24) {
+      return 'Добрый вечер';
+    } else {
+      return 'Доброй ночи';
+    }
+  };
+
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -21,7 +34,7 @@ const Header = () => {
           </div>
           <div className={`${styles['header__user']}`}>
             <span>
-            Здравствуйте, {user.name}.
+              {getGreeting()}, {user.name}.
             </span>
             <Button onClick={handleLogout}>
               Выйти

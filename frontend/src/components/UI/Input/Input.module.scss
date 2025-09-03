@@ -1,7 +1,8 @@
 .inputGroup {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 16px;
 
   label {
@@ -22,4 +23,18 @@
       border-color: #007bff;
     }
   }
+}
+
+.inputDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.errorMessage {
+  position: absolute;
+  margin-top: 63px;
+  font-size: 12px;
+  font-weight: 500;
+  color: red;
 }

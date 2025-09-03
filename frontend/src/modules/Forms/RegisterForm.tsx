@@ -1,12 +1,13 @@
-import * as React from "react";
-import {useState} from 'react';
+import * as React from 'react';
+import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
-import type {RootState} from "../../store/store.ts";
-import {setCredentials, setError, setLoading} from "../../store/slices/authSlice.ts";
-import styles from './Form.module.scss';
+import type {RootState} from '../../store/store.ts';
+import {setCredentials, setError, setLoading} from '../../store/slices/authSlice.ts';
 import {getErrorMessage} from '../../utils/errors.ts';
-import Input from "../../components/UI/Input/Input.tsx";
+import Input from '../../components/UI/Input/Input.tsx';
+import styles from './Form.module.scss';
+import Button from "../../components/UI/Button/Button.tsx";
 
 interface RegisterFormData {
   name: string;
@@ -19,44 +20,21 @@ const BASE_URL = 'http://localhost:5000/api/auth';
 
 const RegisterForm: React.FC = () => {
   const dispatch = useDispatch();
-  const {error, loading} = useSelector((state: RootState) => state.auth);
+  const {error: authError, loading} = useSelector((state: RootState) => state.auth);
 
-  const [formData, setFormData] = useState<RegisterFormData>({
-    name: '',
-    surname: '',
-    email: '',
-    password: '',
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: {errors},
+    reset,
+  } = useForm<RegisterFormData>();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {name, value} = e.target;
-    setFormData(prev => ({...prev, [name as keyof RegisterFormData]: value}));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.surname || !formData.email || !formData.password) {
-      dispatch(setError('Заполните все поля'));
-      return;
-    }
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
-      dispatch(setError('Введите корректный email'));
-      return;
-    }
-    if (!/^[а-яА-ЯёЁ\s-]+$/.test(formData.name) || !/^[а-яА-ЯёЁ\s-]+$/.test(formData.surname)) {
-      dispatch(setError('Имя и фамилия должны содержать только русские буквы, пробелы или дефисы'));
-      return;
-    }
-    if (formData.password.length < 6) {
-      dispatch(setError('Пароль должен быть не короче 6 символов'));
-      return;
-    }
-
+  const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     dispatch(setLoading());
     try {
-      const response = await axios.post(`${BASE_URL}/register`, formData);
+      const response = await axios.post(`${BASE_URL}/register`, data);
       dispatch(setCredentials({token: response.data.token, user: response.data.user}));
-      setFormData({name: '', surname: '', email: '', password: ''});
+      reset(); // Очищаем форму после успеха
     } catch (err: unknown) {
       dispatch(setError(getErrorMessage(err)));
     }
@@ -65,43 +43,66 @@ const RegisterForm: React.FC = () => {
   return (
     <div className={`${styles['form-container']}`}>
       <h2 className={`${styles['form-title']}`}>Регистрация</h2>
-      {error && <p className={`${styles['form__error']}`}>{error}</p>}
-      <form className={`${styles['form-inputs']}`} onSubmit={handleSubmit}>
+      <form className={`${styles['form-inputs']}`} onSubmit={handleSubmit(onSubmit)}>
         <Input
           type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
+          {...register('name', {
+            required: 'Заполните поле',
+            pattern: {
+              value: /^[а-яА-ЯёЁ\s-]+$/,
+              message: 'Имя должно содержать только русские буквы',
+            },
+          })}
           placeholder="Введите имя"
           label="Имя"
+          error={errors.name?.message}
         />
+
         <Input
           type="text"
-          name="surname"
-          value={formData.surname}
-          onChange={handleChange}
+          {...register('surname', {
+            required: 'Заполните поле',
+            pattern: {
+              value: /^[а-яА-ЯёЁ\s-]+$/,
+              message: 'Фамилия должна содержать только русские буквы',
+            },
+          })}
           placeholder="Введите фамилию"
           label="Фамилия"
+          error={errors.surname?.message}
         />
+
         <Input
           type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
+          {...register('email', {
+            required: 'Заполните поле',
+            pattern: {
+              value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+              message: 'Введите корректный email',
+            },
+          })}
           placeholder="Введите email"
           label="Email"
+          error={errors.email?.message}
         />
+
         <Input
           type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
+          {...register('password', {
+            required: 'Заполните поле',
+            minLength: {
+              value: 6,
+              message: 'Пароль должен быть не короче 6 символов',
+            },
+          })}
           placeholder="Введите пароль"
           label="Пароль"
+          error={errors.password?.message}
         />
-        <button type="submit" disabled={loading}>
+        {authError && <span className={`${styles['form__error--register']}`}>{authError}</span>}
+        <Button style={{marginTop: '20px'}} type="submit" disabled={loading}>
           {loading ? 'Загрузка...' : 'Зарегистрироваться'}
-        </button>
+        </Button>
       </form>
     </div>
   );

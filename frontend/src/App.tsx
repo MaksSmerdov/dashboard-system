@@ -10,6 +10,7 @@ import RegisterForm from './modules/Forms/RegisterForm';
 import LoginForm from './modules/Forms/LoginForm';
 import styles from './App.module.scss';
 import Home from "./modules/Home/Home.tsx";
+import ProtectedRoute from "./providers/ProtectedRoute.tsx";
 
 const BASE_URL = 'http://localhost:5000/api/auth';
 
@@ -43,7 +44,7 @@ const App: React.FC = () => {
       }
     };
 
-    checkToken();
+    void checkToken();
   }, [dispatch]);
 
   // Синхронизируем axios столбец заголовка с текущим token в redux
@@ -74,7 +75,11 @@ const App: React.FC = () => {
           />
           <Route
             path="/dashboard"
-            element={token ? <Home/> : <Navigate to="/login"/>}
+            element={
+              <ProtectedRoute>
+                <Home/>
+              </ProtectedRoute>
+            }
           />
           <Route path="*" element={<Navigate to={token ? '/dashboard' : '/login'}/>}/>
         </Routes>
