@@ -1,6 +1,7 @@
 .dashboard {
   &__title {
     display: flex;
+    flex-wrap: wrap;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
@@ -9,15 +10,9 @@
   &__section {
     &--tables {
       display: flex;
-      flex-shrink: 1;
+      flex-wrap: wrap;
       gap: 20px;
-      align-items: center;
+      align-items: flex-start;
     }
-  }
-
-  &__table {
-    padding: 5px;
-    border: 1px solid grey;
-    border-radius: 12px;
   }
 }

@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useApiData} from '../../hooks/useApiData';
 import DashboardConfig from "./components/DashboardConfig/DashboardConfig.tsx";
+import DashboardTable from "./components/DashboardTable/DashboardTable.tsx";
 import {loadDashboardConfig} from './utils/localStorage.ts';
 import {API_ENDPOINTS} from "../../store/slices/dataSlice.ts";
 import styles from './Dashboard.module.scss';
@@ -23,7 +24,7 @@ const Dashboard: React.FC<DashboardProps> = ({userId}) => {
   const isLoading = Object.values(loading).some((status) => status === 'pending');
 
   return (
-    <div className={`container`}>
+    <section className={`container`}>
       <div className={`${styles['dashboard__title']}`}>
         <h2 className={`${styles['dashboard__title--name']}`}>Дашборд</h2>
         <Button onClick={() => setIsModalOpen(true)}>
@@ -55,30 +56,7 @@ const Dashboard: React.FC<DashboardProps> = ({userId}) => {
               {endpointConfig.displayType === 'table' ? (
                 endpointConfig.fields.map((field) => (
                   endpointData[field] && (
-                    <div className={`${styles['dashboard__table']}`} key={field}>
-                      <table>
-                        <thead>
-                        <tr>
-                          <th className={styles['dashboard__table-th']}>Параметр</th>
-                          <th className={styles['dashboard__table-th']}>Значение</th>
-                          <th className={styles['dashboard__table-th']}>Ед. измерения</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {Object.entries(endpointData[field]).map(([key, value]) => (
-                          <tr key={key}>
-                            <td className={styles['dashboard__table-td']}>{key}</td>
-                            <td className={styles['dashboard__table-td']}>
-                              {typeof value === 'object' ? JSON.stringify(value) : value.toString()}
-                            </td>
-                            <td className={styles['dashboard__table-td']}>
-                              -
-                            </td>
-                          </tr>
-                        ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <DashboardTable key={field} data={endpointData} field={field}/>
                   )
                 ))
               ) : (
@@ -91,7 +69,7 @@ const Dashboard: React.FC<DashboardProps> = ({userId}) => {
       {Object.keys(config).length === 0 && !isLoading && (
         <p className={styles.dashboard__error}>Настройте дашборд, чтобы отобразить данные.</p>
       )}
-    </div>
+    </section>
   );
 };
 
