@@ -1,6 +1,7 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import axios from 'axios';
 import type {ApiData, DataState} from '../../types/data';
+import type {RootState} from "../store.ts";
 
 // Временный список эндпоинтов с отображаемыми названиями
 const API_ENDPOINTS = [
@@ -27,7 +28,7 @@ export const fetchApiData = createAsyncThunk<
         return rejectWithValue(`Неизвестный эндпоинт: ${key}`);
       }
       const response = await axios.get<ApiData>(endpoint.url, {
-        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`},
+        headers: {Authorization: `Bearer ${localStorage.getItem('accessToken')}`},
       });
       return {key, data: response.data};
     } catch (error) {
@@ -39,11 +40,21 @@ export const fetchApiData = createAsyncThunk<
 // Async thunk для получения данных со всех эндпоинтов
 export const fetchAllApiData = createAsyncThunk<void, void, { rejectValue: string }>(
   'data/fetchAllApiData',
-  async (_, {dispatch}) => {
-    // Запускаем запросы параллельно
-    await Promise.all(
-      API_ENDPOINTS.map((endpoint) => dispatch(fetchApiData(endpoint.key)).unwrap())
-    );
+  async (_, {dispatch, getState}) => {
+    const state = getState() as RootState;
+    // Запускаем запросы только для эндпоинтов, у которых нет данных
+    const endpointsToFetch = API_ENDPOINTS.filter((endpoint) => !state.data.data[endpoint.key]);
+    if (endpointsToFetch.length === 0) {
+      // Если все данные уже загружены, просто обновляем их без изменения loading
+      await Promise.all(
+        API_ENDPOINTS.map((endpoint) => dispatch(fetchApiData(endpoint.key)).unwrap())
+      );
+    } else {
+      // Устанавливаем loading только для эндпоинтов, у которых нет данных
+      await Promise.all(
+        endpointsToFetch.map((endpoint) => dispatch(fetchApiData(endpoint.key)).unwrap())
+      );
+    }
   }
 );
 
@@ -61,8 +72,11 @@ const dataSlice = createSlice({
     builder
       .addCase(fetchApiData.pending, (state, action) => {
         const key = action.meta.arg;
-        state.loading[key] = 'pending';
-        state.error[key] = null;
+        // Устанавливаем loading только если данных ещё нет
+        if (!state.data[key]) {
+          state.loading[key] = 'pending';
+          state.error[key] = null;
+        }
       })
       .addCase(fetchApiData.fulfilled, (state, action) => {
         const {key, data} = action.payload;
@@ -76,9 +90,12 @@ const dataSlice = createSlice({
         state.error[key] = action.payload as string;
       })
       .addCase(fetchAllApiData.pending, (state) => {
+        // Устанавливаем loading только для эндпоинтов без данных
         API_ENDPOINTS.forEach((ep) => {
-          state.loading[ep.key] = 'pending';
-          state.error[ep.key] = null;
+          if (!state.data[ep.key]) {
+            state.loading[ep.key] = 'pending';
+            state.error[ep.key] = null;
+          }
         });
       });
   },
@@ -86,5 +103,4 @@ const dataSlice = createSlice({
 
 export default dataSlice.reducer;
 
-// Экспортируем API_ENDPOINTS для использования в других компонентах
 export {API_ENDPOINTS};

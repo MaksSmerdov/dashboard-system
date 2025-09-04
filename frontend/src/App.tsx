@@ -1,4 +1,3 @@
-// src/App.tsx
 import * as React from "react";
 import {useEffect, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
@@ -19,6 +18,19 @@ const App: React.FC = () => {
   const {token} = useSelector((state: RootState) => state.auth);
   const [checking, setChecking] = useState(true);
 
+  const refreshAccessToken = async () => {
+    try {
+      const response = await axios.post(`${BASE_URL}/refresh-token`, {}, {withCredentials: true});
+      const {accessToken, user} = response.data;
+      dispatch(setCredentials({token: accessToken, user}));
+      return accessToken;
+    } catch (err) {
+      dispatch(setError('Не удалось обновить токен, пожалуйста, войдите снова'));
+      dispatch(logout());
+      throw err;
+    }
+  };
+
   useEffect(() => {
     const checkToken = async () => {
       const storedToken = localStorage.getItem('token');
@@ -34,8 +46,16 @@ const App: React.FC = () => {
         dispatch(setCredentials({token: storedToken, user: response.data.user}));
       } catch (err: unknown) {
         if (axios.isAxiosError(err) && err.response?.status === 401) {
-          dispatch(setError('Токен недействителен, пожалуйста, войдите снова'));
-          dispatch(logout());
+          try {
+            const newToken = await refreshAccessToken();
+            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+            const response = await axios.get(`${BASE_URL}/me`);
+            dispatch(setCredentials({token: newToken, user: response.data.user}));
+          } catch (refreshErr) {
+            console.log(refreshErr);
+            dispatch(setError('Токен недействителен, пожалуйста, войдите снова'));
+            dispatch(logout());
+          }
         } else {
           dispatch(setError('Не удалось проверить токен. Проверьте соединение.'));
         }
@@ -47,7 +67,6 @@ const App: React.FC = () => {
     void checkToken();
   }, [dispatch]);
 
-  // Синхронизируем axios столбец заголовка с текущим token в redux
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -56,7 +75,6 @@ const App: React.FC = () => {
     }
   }, [token]);
 
-  // Пока мы проверяем токен, можно вернуть простой загрузчик (или null)
   if (checking) {
     return <div className={`${styles['container']}`}><p>Проверка сессии...</p></div>;
   }

@@ -1,13 +1,14 @@
 import * as React from 'react';
 import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useDispatch, useSelector} from 'react-redux';
+import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import type {RootState} from '../../store/store.ts';
-import {setCredentials, setError, setLoading} from '../../store/slices/authSlice.ts';
-import {getErrorMessage} from '../../utils/errors.ts';
-import Input from '../../components/UI/Input/Input.tsx';
+import type {RootState} from '../../store/store';
+import {setCredentials, setError, setLoading} from '../../store/slices/authSlice';
+import {getErrorMessage} from '../../utils/errors';
+import Input from '../../components/UI/Input/Input';
+import Button from '../../components/UI/Button/Button';
 import styles from './Form.module.scss';
-import Button from "../../components/UI/Button/Button.tsx";
 
 interface RegisterFormData {
   name: string;
@@ -21,28 +22,39 @@ const BASE_URL = 'http://localhost:5000/api/auth';
 const RegisterForm: React.FC = () => {
   const dispatch = useDispatch();
   const {error: authError, loading} = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     formState: {errors},
     reset,
+    setError: setFormError,
   } = useForm<RegisterFormData>();
 
   const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     dispatch(setLoading());
     try {
-      const response = await axios.post(`${BASE_URL}/register`, data);
-      dispatch(setCredentials({token: response.data.token, user: response.data.user}));
-      reset(); // Очищаем форму после успеха
+      const response = await axios.post(`${BASE_URL}/register`, data, {withCredentials: true});
+      dispatch(setCredentials({token: response.data.accessToken, user: response.data.user}));
+      reset();
+      navigate('/dashboard');
     } catch (err: unknown) {
-      dispatch(setError(getErrorMessage(err)));
+      if (axios.isAxiosError(err) && err.response?.data?.errors) {
+        const serverErrors = err.response.data.errors;
+        serverErrors.forEach((error: { path: string; msg: string }) => {
+          setFormError(error.path as keyof RegisterFormData, {message: error.msg});
+        });
+      } else {
+        dispatch(setError(getErrorMessage(err)));
+      }
     }
   };
 
   return (
     <div className={`${styles['form-container']}`}>
       <h2 className={`${styles['form-title']}`}>Регистрация</h2>
+      {authError && <span className={`${styles['form__error']}`}>{authError}</span>}
       <form className={`${styles['form-inputs']}`} onSubmit={handleSubmit(onSubmit)}>
         <Input
           type="text"
@@ -99,7 +111,6 @@ const RegisterForm: React.FC = () => {
           label="Пароль"
           error={errors.password?.message}
         />
-        {authError && <span className={`${styles['form__error--register']}`}>{authError}</span>}
         <Button style={{marginTop: '20px'}} type="submit" disabled={loading}>
           {loading ? 'Загрузка...' : 'Зарегистрироваться'}
         </Button>

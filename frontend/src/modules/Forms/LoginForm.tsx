@@ -3,11 +3,11 @@ import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import type {RootState} from '../../store/store.ts';
-import {setCredentials, setError, setLoading} from '../../store/slices/authSlice.ts';
-import {getErrorMessage} from '../../utils/errors.ts';
-import Button from '../../components/UI/Button/Button.tsx';
-import Input from '../../components/UI/Input/Input.tsx';
+import type {RootState} from '../../store/store';
+import {setCredentials, setError, setLoading} from '../../store/slices/authSlice';
+import {getErrorMessage} from '../../utils/errors';
+import Button from '../../components/UI/Button/Button';
+import Input from '../../components/UI/Input/Input';
 import styles from './Form.module.scss';
 
 interface LoginFormData {
@@ -27,21 +27,21 @@ const LoginForm: React.FC = () => {
     handleSubmit,
     formState: {errors},
     reset,
-    setError: setFormError, // Добавляем для обработки серверных ошибок под полями
+    setError: setFormError,
   } = useForm<LoginFormData>();
 
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
     dispatch(setLoading());
     try {
-      const response = await axios.post(`${BASE_URL}/login`, data);
-      dispatch(setCredentials({token: response.data.token, user: response.data.user}));
+      const response = await axios.post(`${BASE_URL}/login`, data, {withCredentials: true});
+      dispatch(setCredentials({token: response.data.accessToken, user: response.data.user}));
       reset();
+      navigate('/dashboard'); // Перенаправляем после успешного входа
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.data?.errors) {
-        // Аналогично RegisterForm: Устанавливаем ошибки под поля, если сервер возвращает структурированные ошибки
         const serverErrors = err.response.data.errors;
-        Object.keys(serverErrors).forEach((field) => {
-          setFormError(field as keyof LoginFormData, {message: serverErrors[field]});
+        serverErrors.forEach((error: { path: string; msg: string }) => {
+          setFormError(error.path as keyof LoginFormData, {message: error.msg});
         });
       } else {
         dispatch(setError(getErrorMessage(err)));
@@ -50,7 +50,7 @@ const LoginForm: React.FC = () => {
   };
 
   const handleRegisterClick = () => {
-    navigate('/register'); // Навигация на страницу регистрации
+    navigate('/register');
   };
 
   return (
@@ -79,7 +79,6 @@ const LoginForm: React.FC = () => {
           label="Пароль"
           error={errors.password?.message}
         />
-        {authError && <span className={`${styles['form__error--login']}`}>{authError}</span>}
         <Button style={{marginTop: '20px'}} type="submit" disabled={loading}>
           {loading ? 'Загрузка...' : 'Войти'}
         </Button>

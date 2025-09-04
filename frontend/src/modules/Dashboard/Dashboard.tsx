@@ -1,4 +1,3 @@
-// src/components/Dashboard/Dashboard.tsx
 import React, {useState, useEffect} from 'react';
 import {useApiData} from '../../hooks/useApiData';
 import DashboardConfig from "./components/DashboardConfig/DashboardConfig.tsx";

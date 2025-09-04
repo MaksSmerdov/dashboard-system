@@ -9,10 +9,10 @@ const Home: React.FC = () => {
   const userId = useSelector((state: RootState) => state.auth.user?.email || 'guest');
 
   return (
-    <div>
+    <>
       <Header/>
       <Dashboard userId={userId}/>
-    </div>
+    </>
   );
 };
 

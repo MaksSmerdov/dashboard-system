@@ -9,6 +9,7 @@
   &__section {
     &--tables {
       display: flex;
+      flex-shrink: 1;
       gap: 20px;
       align-items: center;
     }

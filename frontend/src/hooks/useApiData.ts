@@ -1,8 +1,7 @@
-// src/hooks/useApiData.ts
 import {useSelector, useDispatch} from 'react-redux';
 import {useEffect} from 'react';
-import type {RootState, AppDispatch} from "../store/store.ts";
-import {fetchAllApiData} from "../store/slices/dataSlice.ts";
+import type {RootState, AppDispatch} from "../store/store";
+import {fetchAllApiData} from "../store/slices/dataSlice";
 
 export const useApiData = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -12,6 +11,12 @@ export const useApiData = () => {
 
   useEffect(() => {
     dispatch(fetchAllApiData());
+
+    const intervalId = setInterval(() => {
+      dispatch(fetchAllApiData());
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [dispatch]);
 
   return {data, loading, error};

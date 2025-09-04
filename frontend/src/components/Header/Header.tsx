@@ -8,7 +8,7 @@ const Header = () => {
   const {user} = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
-  const getGreeting = () => {
+  const getGreeting = (): string => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) {
       return 'Доброе утро';
@@ -21,7 +21,7 @@ const Header = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     dispatch(logout());
   };
 
