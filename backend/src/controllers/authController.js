@@ -37,10 +37,20 @@ export const register = [
       user = new User({ name, surname, email, password: hashedPassword });
       await user.save();
 
-      const payload = { user: { id: user.id } };
-      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const accessPayload = { user: { id: user.id } };
+      const refreshPayload = { user: { id: user.id } };
 
-      res.json({ token, user: { name: user.name, surname: user.surname, email: user.email } });
+      const accessToken = jwt.sign(accessPayload, process.env.JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign(refreshPayload, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+      });
+
+      res.json({ accessToken, user: { name: user.name, surname: user.surname, email: user.email } });
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Ошибка сервера');
@@ -71,10 +81,20 @@ export const login = [
         return res.status(400).json({ msg: 'Неверные учетные данные' });
       }
 
-      const payload = { user: { id: user.id } };
-      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+      const accessPayload = { user: { id: user.id } };
+      const refreshPayload = { user: { id: user.id } };
 
-      res.json({ token, user: { name: user.name, surname: user.surname, email: user.email } });
+      const accessToken = jwt.sign(accessPayload, process.env.JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign(refreshPayload, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+      });
+
+      res.json({ accessToken, user: { name: user.name, surname: user.surname, email: user.email } });
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Ошибка сервера');
@@ -92,5 +112,24 @@ export const getMe = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Ошибка сервера');
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ msg: 'Нет refresh токена, авторизация отклонена ' });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const accessPayload = { user: { id: decoded.user.id } };
+    const accessToken = jwt.sign(accessPayload, process.env.JWT_SECRET, { expiresIn: '15m' });
+
+    res.json({ accessToken });
+  } catch (err) {
+    console.error(err.message);
+    res.status(401).json({ msg: 'Refresh токен недействителен' });
   }
 };
